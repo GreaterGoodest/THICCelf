@@ -7,17 +7,41 @@
 #include <string.h>
 #include <elf.h>
 
-int get_next_segment(){
+int get_next_segment(FILE *binary, Elf64_Phdr *segment){
+    /* Gets the next segment from the provided binary and returns it via segment parameter
 
-    return 0;
+    */
+    int retval = 0;
+    
+    return retval;
 }
 
-int find_executable_segment(){
 
-    return 0;
+int find_executable_segment(FILE *binary, Elf64_Phdr *segment){
+    /* Locates the executable segment within the binary and returns it via segment parameter
+
+    */
+    int retval = 0;
+    int found_executable = 0;
+    
+    while (!found_executable){
+        retval = get_next_segment(binary, segment);
+        if (retval != 0 ){
+            puts("Failed to get next segment");
+            goto cleanup;
+        }
+        found_executable = 1;
+    }
+
+cleanup:
+    return retval;
 }
+
 
 int swap_entry_point(FILE *binary, int entry_address){
+    /* Replaces binary entry point with provided address
+
+    */
     int count = 0;
     Elf64_Ehdr header;
 
@@ -41,9 +65,13 @@ int swap_entry_point(FILE *binary, int entry_address){
     return 0;
 }
 
+
 int main(int argc, char *argv[]){
     int retval = 0;
     FILE *binary = NULL;
+    Elf64_Phdr exe_segment;
+
+    memset(&exe_segment, 0, sizeof(exe_segment));
 
     if(argc != 2){
         puts("Invalid usage");
@@ -57,7 +85,7 @@ int main(int argc, char *argv[]){
         goto cleanup;
     }
 
-    retval = find_executable_segment();
+    retval = find_executable_segment(binary, &exe_segment);
     if (retval > 0){
         puts("Failed to find executable segment");
         goto cleanup;
