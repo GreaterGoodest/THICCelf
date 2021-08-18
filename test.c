@@ -2,32 +2,19 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/mman.h>
 
-void _start();
+//shellcode from assembled asm/test.asm
+const char *code = "\x55\x48\x89\xe5\x51\x52\x41\x50\x41\x51\x41\x59\x41\x58\x5a\x59\x48\x89\xec\x5d\x68\x40\x10\x40\x00\xc3";
 
-//int __attribute__((constructor)) test(){
-void test(){
-    asm("xor %r9, %r9");
-    asm("push %rcx");
-    asm("push %rdx");
-    asm("push %r8");
-    asm("push %r9");
-
-    puts("test");
-
-    asm("pop %r9");
-    asm("pop %r8");
-    asm("pop %rdx");
-    asm("pop %rcx");
-    _start();
+void test()
+{
+    (*(void (*)())code)();
 }
 
-/*void _init(void){
-    puts("init");
-}*/
-
-
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
     puts("main");
+
     return 0;
 }
