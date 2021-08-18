@@ -9,6 +9,7 @@ const char *code = "\x55\x48\x89\xe5\x51\x52\x41\x50\x41\x51\x41\x59\x41\x58\x5a
 
 void test()
 {
+    /*Modify entry point to point here, main will be reached*/
     (*(void (*)())code)();
 }
 
