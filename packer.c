@@ -17,7 +17,7 @@ int get_next_ph(FILE *binary, Elf64_Phdr *segment)
     Elf64_Phdr program_header;
 
     count = fread(&program_header, sizeof(Elf64_Phdr), 1, binary);
-    if (count <= 0)
+    if (count < 0)
     {
         perror("Unable to read binary");
         return 1;
@@ -53,7 +53,6 @@ int find_executable_segment(FILE *binary, Elf64_Phdr *segment, int ph_start, int
         curr_ph++;
     }
 
-    rewind(binary);
     return retval;
 }
 
@@ -112,11 +111,28 @@ int swap_entry_point(FILE *binary, int entry_address)
     return 0;
 }
 
+int calculate_padding(FILE *binary, Elf64_Phdr exe_phdr, int *padding)
+{
+    int retval = 0;
+    Elf64_Phdr next_phdr;
+
+    get_next_ph(binary, &next_phdr);
+
+    printf("Next segment at: 0x%x\n", next_phdr.p_paddr);
+    printf("Executable segment size: %d\n", exe_phdr.p_filesz);
+
+    *padding = next_phdr.p_paddr - (exe_phdr.p_paddr + exe_phdr.p_filesz);
+
+    rewind(binary);
+    return retval;
+}
+
 int main(int argc, char *argv[])
 {
     int retval = 0;
     int ph_start = 0; //start address for program headers
     int ph_num = 0;   //program header (ph) count
+    int padding = 0;
     FILE *binary = NULL;
     Elf64_Phdr exe_segment;
 
@@ -151,7 +167,16 @@ int main(int argc, char *argv[])
         goto cleanup;
     }
 
-    printf("Executable segment at: 0x%x\n", exe_segment.p_vaddr);
+    printf("Executable segment at: 0x%x\n", exe_segment.p_paddr);
+
+    retval = calculate_padding(binary, exe_segment, &padding);
+    if (retval > 0)
+    {
+        puts("Failed to calculate available padding");
+        goto cleanup;
+    }
+
+    printf("Padding available: %d bytes\n", padding);
 
     retval = swap_entry_point(binary, 0x401122);
     if (retval > 0)
