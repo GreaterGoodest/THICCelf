@@ -92,6 +92,8 @@ int swap_entry_point(FILE *binary, int entry_address)
         return 1;
     }
 
+    rewind(binary);
+
     return 0;
 }
 
