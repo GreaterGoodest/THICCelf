@@ -7,40 +7,57 @@
 #include <string.h>
 #include <elf.h>
 
-int get_next_segment(FILE *binary, Elf64_Phdr *segment)
+int get_next_ph(FILE *binary, Elf64_Phdr *segment)
 {
     /* Gets the next segment from the provided binary and returns it via segment parameter
 
     */
     int retval = 0;
+    int count = 0;
+    Elf64_Phdr program_header;
 
+    count = fread(&program_header, sizeof(Elf64_Phdr), 1, binary);
+    if (count <= 0)
+    {
+        perror("Unable to read binary");
+        return 1;
+    }
+
+    *segment = program_header;
     return retval;
 }
 
-int find_executable_segment(FILE *binary, Elf64_Phdr *segment, int ph_start, int ph_size, int ph_num)
+int find_executable_segment(FILE *binary, Elf64_Phdr *segment, int ph_start, int ph_num)
 {
     /* Locates the executable segment within the binary and returns it via segment parameter
 
     */
     int retval = 0;
-    int found_executable = 0;
+    int curr_ph = 0;
 
-    while (!found_executable)
+    fseek(binary, ph_start, SEEK_CUR);
+    while (curr_ph < ph_num)
     {
-        retval = get_next_segment(binary, segment);
+        retval = get_next_ph(binary, segment);
         if (retval != 0)
         {
             puts("Failed to get next segment");
-            goto cleanup;
+            return retval;
         }
-        found_executable = 1;
+
+        if (segment->p_flags & PF_X)
+        {
+            break;
+        }
+
+        curr_ph++;
     }
 
-cleanup:
+    rewind(binary);
     return retval;
 }
 
-int get_ph_info(FILE *binary, int *ph_start, int *ph_size, int *ph_num)
+int get_ph_info(FILE *binary, int *ph_start, int *ph_num)
 {
     /* Get start of program headers, and size of program headers
 
@@ -55,11 +72,9 @@ int get_ph_info(FILE *binary, int *ph_start, int *ph_size, int *ph_num)
         return 1;
     }
     printf("Program Headers start at: %d\n", header.e_phoff);
-    printf("Prgram Header size is: %d\n", header.e_phentsize);
     printf("Total program header entries: %d\n", header.e_phnum);
 
     *ph_start = header.e_phoff;
-    *ph_size = header.e_phentsize;
     *ph_num = header.e_phnum;
 
     rewind(binary);
@@ -101,7 +116,6 @@ int main(int argc, char *argv[])
 {
     int retval = 0;
     int ph_start = 0; //start address for program headers
-    int ph_size = 0;  //program header (ph) size in this binary
     int ph_num = 0;   //program header (ph) count
     FILE *binary = NULL;
     Elf64_Phdr exe_segment;
@@ -119,10 +133,10 @@ int main(int argc, char *argv[])
     {
         perror("Unable to open binary");
         retval = 1;
-        goto cleanup;
+        return retval;
     }
 
-    retval = get_ph_info(binary, &ph_start, &ph_size, &ph_num);
+    retval = get_ph_info(binary, &ph_start, &ph_num);
     if (retval > 0)
     {
         puts("Failed to find segment size");
@@ -130,12 +144,14 @@ int main(int argc, char *argv[])
         goto cleanup;
     }
 
-    retval = find_executable_segment(binary, &exe_segment, ph_start, ph_size, ph_num);
+    retval = find_executable_segment(binary, &exe_segment, ph_start, ph_num);
     if (retval > 0)
     {
         puts("Failed to find executable segment");
         goto cleanup;
     }
+
+    printf("Executable segment at: 0x%x\n", exe_segment.p_vaddr);
 
     retval = swap_entry_point(binary, 0x401122);
     if (retval > 0)
