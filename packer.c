@@ -186,19 +186,21 @@ int expand_execuable_segment(FILE *binary, Elf64_Addr exe_ph_start, Elf64_Phdr e
 
        Returns new segment end address
     */
+    Elf64_Addr old_end = 0;
 
     rewind(binary);
     printf("exe ph start: %d\n", exe_ph_start);
     fseek(binary, exe_ph_start, SEEK_CUR); //go to exe ph start
 
+    old_end = exe_ph.p_paddr + exe_ph.p_filesz;
+
     exe_ph.p_filesz += payload_size + 1;
     exe_ph.p_memsz += payload_size + 1;
 
     fwrite(&exe_ph, sizeof(exe_ph), 1, binary);
-
     rewind(binary);
 
-    return exe_ph.p_paddr + exe_ph.p_filesz;
+    return old_end;
 }
 
 int main(int argc, char *argv[])
@@ -276,12 +278,14 @@ int main(int argc, char *argv[])
 
     printf("Original exe segment size: %d\n", exe_ph.p_filesz);
 
-    retval = expand_execuable_segment(binary, exe_ph_start, exe_ph, payload_size);
-    if (retval <= 0)
+    exe_ph_end = expand_execuable_segment(binary, exe_ph_start, exe_ph, payload_size);
+    if (exe_ph_end <= 0)
     {
         puts("Failed to expand executable segment");
         goto cleanup;
     }
+
+    printf("Writing payload to old segment end: 0x%x\n", exe_ph_end);
 
     /*retval = swap_entry_point(binary, 0x401122);
     if (retval > 0)
