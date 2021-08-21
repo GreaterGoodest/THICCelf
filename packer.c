@@ -34,10 +34,12 @@ int find_executable_ph(FILE *binary, Elf64_Phdr *ph, int ph_start, int ph_num)
     */
     int retval = 0;
     int curr_ph = 0;
+    Elf64_Addr curr_ph_start = 0; //addr where current ph begins
 
     fseek(binary, ph_start, SEEK_CUR);
     while (curr_ph < ph_num)
     {
+        curr_ph_start = ftell(binary);
         retval = get_next_ph(binary, ph);
         if (retval != 0)
         {
@@ -45,9 +47,9 @@ int find_executable_ph(FILE *binary, Elf64_Phdr *ph, int ph_start, int ph_num)
             return -1;
         }
 
-        if (ph->p_flags & PF_X)
+        if (ph->p_flags & PF_X) // found exe segment ph?
         {
-            return ftell(binary); //TODO: get value before getting next ph
+            return curr_ph_start;
         }
 
         curr_ph++;
@@ -189,8 +191,8 @@ int expand_execuable_segment(FILE *binary, Elf64_Addr exe_ph_start, Elf64_Phdr e
     printf("exe ph start: %d\n", exe_ph_start);
     fseek(binary, exe_ph_start, SEEK_CUR); //go to exe ph start
 
-    //exe_ph.p_filesz += payload_size + 1;
-    //exe_ph.p_memsz += payload_size + 1;
+    exe_ph.p_filesz += payload_size + 1;
+    exe_ph.p_memsz += payload_size + 1;
 
     fwrite(&exe_ph, sizeof(exe_ph), 1, binary);
 
