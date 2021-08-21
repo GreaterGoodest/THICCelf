@@ -1,4 +1,3 @@
 *.o
 *.out
 *.shell
-.gdb_history
