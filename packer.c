@@ -203,6 +203,11 @@ int expand_execuable_segment(FILE *binary, Elf64_Addr exe_ph_start, Elf64_Phdr e
     return old_end;
 }
 
+int inject_payload(FILE *binary, Elf64_Addr prev_exe_ph_end, uint8_t *payload)
+{
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     int retval = 0;
@@ -212,8 +217,8 @@ int main(int argc, char *argv[])
     int payload_size = 0;
     FILE *binary = NULL;
     Elf64_Phdr exe_ph;
-    Elf64_Addr exe_ph_start; //where executable program header begins
-    Elf64_Addr exe_ph_end;   //where exe ph ends after modification
+    Elf64_Addr exe_ph_start;    //where executable program header begins
+    Elf64_Addr prev_exe_ph_end; //where exe ph ends before modification
     uint8_t *payload = NULL;
 
     memset(&exe_ph, 0, sizeof(exe_ph));
@@ -278,14 +283,21 @@ int main(int argc, char *argv[])
 
     printf("Original exe segment size: %d\n", exe_ph.p_filesz);
 
-    exe_ph_end = expand_execuable_segment(binary, exe_ph_start, exe_ph, payload_size);
-    if (exe_ph_end <= 0)
+    prev_exe_ph_end = expand_execuable_segment(binary, exe_ph_start, exe_ph, payload_size);
+    if (prev_exe_ph_end <= 0)
     {
         puts("Failed to expand executable segment");
         goto cleanup;
     }
 
-    printf("Writing payload to old segment end: 0x%x\n", exe_ph_end);
+    printf("Writing payload to old segment end: 0x%x\n", prev_exe_ph_end);
+
+    retval = inject_payload(binary, prev_exe_ph_end, payload);
+    if (retval > 0)
+    {
+        puts("Failed to inject payload");
+        goto cleanup;
+    }
 
     /*retval = swap_entry_point(binary, 0x401122);
     if (retval > 0)
