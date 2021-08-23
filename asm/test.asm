@@ -20,7 +20,7 @@ _start:
     mov  rdi, 1 ;stdout
     push 0x0a6e7770 ;pwn\n
     mov  rsi, rsp
-    mov  rdx, 0x4
+    mov  rdx, 0x4 ;string length
     mov  rax, 0x1 ;write syscall number
     syscall
 
