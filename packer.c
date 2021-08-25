@@ -58,7 +58,7 @@ int find_executable_ph(FILE *binary, Elf64_Phdr *ph, int ph_start, int ph_num)
     return -1;
 }
 
-int get_ph_info(FILE *binary, int *ph_start, int *ph_num)
+int get_ph_info(FILE *binary, int *ph_start, int *ph_num, Elf64_Addr *entrypoint)
 {
     /* Get start of program headers, and size of program headers
 
@@ -77,6 +77,7 @@ int get_ph_info(FILE *binary, int *ph_start, int *ph_num)
 
     *ph_start = header.e_phoff;
     *ph_num = header.e_phnum;
+    *entrypoint = header.e_entry;
 
     rewind(binary);
 }
@@ -275,6 +276,30 @@ int expand_fini(FILE *binary, int payload_size)
     return 0;
 }
 
+int stamp_entrypoint(uint8_t *payload, Elf64_Addr entrypoint)
+{
+    uint8_t *payload_ptr = payload;
+    int stamped = 0;
+
+    while (!stamped)
+    {
+        printf("checking: %lx\n", *((long *)payload_ptr));
+        if (*((long *)payload_ptr) == 0)
+        {
+            break;
+        }
+        if (!(*((long *)payload_ptr) ^ 0xAAAAAAAAAAAAAAAA))
+        {
+            *((long *)payload_ptr) = (long)entrypoint;
+            printf("Overwrote placeholder with entrypoint: %lx", entrypoint);
+            return 0;
+        }
+        payload_ptr++;
+    }
+
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
     int retval = 0;
@@ -284,7 +309,8 @@ int main(int argc, char *argv[])
     int payload_size = 0;
     FILE *binary = NULL;
     Elf64_Phdr exe_ph;
-    Elf64_Addr exe_ph_start;         //where executable program header begins
+    Elf64_Addr exe_ph_start; //where executable program header begins
+    Elf64_Addr entrypoint;
     Elf64_Addr prev_exe_segment_end; //where exe ph ends before modification
     uint8_t *payload = NULL;
 
@@ -304,7 +330,7 @@ int main(int argc, char *argv[])
         return retval;
     }
 
-    retval = get_ph_info(binary, &ph_start, &ph_num);
+    retval = get_ph_info(binary, &ph_start, &ph_num, &entrypoint);
     if (retval > 0)
     {
         puts("Failed to find segment size");
@@ -335,6 +361,13 @@ int main(int argc, char *argv[])
     if (retval > 0)
     {
         puts("Failed to load payload");
+        goto cleanup;
+    }
+
+    retval = stamp_entrypoint(payload, entrypoint);
+    if (retval > 0)
+    {
+        puts("faild to stamp payload with original entrypoint");
         goto cleanup;
     }
 

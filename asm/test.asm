@@ -15,6 +15,7 @@ _start:
     push r9
     push rax
     push rbx
+    push r11
 
     ;set up write syscall
     mov  rdi, 1 ;stdout
@@ -24,9 +25,12 @@ _start:
     mov  rax, 0x1 ;write syscall number
     syscall
 
-    ;restore registers
-    pop  rbx ;clear string from stack
+    ;clear string from stack
+    pop  rbx 
     xor  rbx, rbx
+
+    ;restore registers
+    pop  r11
     pop  rbx
     pop  rax
     pop  r9
@@ -35,5 +39,5 @@ _start:
     pop  rcx
     mov  rsp, rbp
     pop  rbp
-    push 0x401070
-    ret
+    mov  rax, 0xAAAAAAAAAAAAAAAA
+    jmp  rax
