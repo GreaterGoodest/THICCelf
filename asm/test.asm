@@ -39,5 +39,7 @@ _start:
     pop  rcx
     mov  rsp, rbp
     pop  rbp
-    mov  rax, 0xAAAAAAAAAAAAAAAA
+
+    ;return to orginal entry point
+    mov  rax, 0xAAAAAAAAAAAAAAAA ;placeholder
     jmp  rax
