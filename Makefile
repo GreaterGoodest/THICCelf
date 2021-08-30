@@ -1,4 +1,4 @@
-SUBDIRS =  asm src
+SUBDIRS =  asm src testing
 .PHONY: $(SUBDIRS)
 
 all clean: $(SUBDIRS)

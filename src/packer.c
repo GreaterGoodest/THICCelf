@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
 
     printf("Padding available: %d bytes\n", padding);
 
-    payload_size = get_payload(&payload, "../asm/test.shell");
+    payload_size = get_payload(&payload, "./asm/test.shell");
     if (retval > 0)
     {
         puts("Failed to load payload");
