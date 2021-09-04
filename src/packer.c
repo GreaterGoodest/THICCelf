@@ -1,11 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#include <elf.h>
+#include "payload.h"
 
 int get_next_ph(FILE *binary, Elf64_Phdr *ph)
 {
@@ -132,57 +125,6 @@ int calculate_padding(FILE *binary, Elf64_Phdr exe_phdr, int *padding)
     return retval;
 }
 
-int get_payload(uint8_t **payload, const char *path)
-{
-    /* Reads payload from disk and converts to binary
-    */
-    int retval = 0;
-    int payload_size = 0;
-
-    FILE *file = fopen(path, "rb");
-    if (file == NULL)
-    {
-        perror("Failed to open payload");
-        return 1;
-    }
-    retval = fseek(file, 0, SEEK_END);
-    if (retval < 0)
-    {
-        perror("Failed to find end of payload file");
-        return 1;
-    }
-    payload_size = ftell(file);
-    if (payload_size < 0)
-    {
-        perror("ftell failure on payload file");
-        return 1;
-    }
-
-    *payload = calloc(1, payload_size + 1);
-    if (*payload == NULL)
-    {
-        puts("Failed to allocate memory for payload");
-        return 1;
-    }
-
-    rewind(file);
-
-    /* Convert hex bytes to binary equivalent */
-    int byte = 0;
-    int counter = 0;
-    const char *formatter = "\\x%02x";
-    uint8_t *payload_tracker = *payload;
-    while (fscanf(file, formatter, &byte) == 1)
-    {
-        payload_tracker[counter++] = byte;
-    }
-
-    *payload = realloc(*payload, counter);
-
-    fclose(file);
-    return counter;
-}
-
 int expand_execuable_segment(FILE *binary, Elf64_Addr exe_ph_start, Elf64_Phdr exe_ph, int payload_size)
 {
     /* Expands executable segment to fit payload
@@ -283,7 +225,6 @@ int stamp_entrypoint(uint8_t *payload, Elf64_Addr entrypoint)
 
     while (!stamped)
     {
-        printf("checking: %lx\n", *((long *)payload_ptr));
         if (*((long *)payload_ptr) == 0)
         {
             break;

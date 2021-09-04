@@ -12,3 +12,4 @@ all: $(SUBDIRS)
 
 clean: 
 	- rm ./bin/*
+	- $(MAKE) -C src -f Makefile clean

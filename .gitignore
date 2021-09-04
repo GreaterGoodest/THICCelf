@@ -2,3 +2,5 @@ test
 packer
 .gdb_history
 bin
+*.o
+*.swp
