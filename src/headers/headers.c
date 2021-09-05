@@ -1,6 +1,8 @@
 #include <elf.h>
 #include <stdio.h>
 
+#include "elf.h"
+
 int get_next_ph(FILE *binary, Elf64_Phdr *ph)
 {
 	/* Gets the next segment from the provided binary and returns it via segment parameter
