@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "payload.h"
 
 int get_payload(uint8_t **payload, const char *path)

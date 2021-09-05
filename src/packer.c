@@ -1,3 +1,8 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <elf.h>
+
 #include "payload.h"
 
 int get_next_ph(FILE *binary, Elf64_Phdr *ph)
