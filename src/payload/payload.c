@@ -77,3 +77,20 @@ int stamp_entrypoint(uint8_t *payload, Elf64_Addr entrypoint)
 
 	return 1;
 }
+
+int inject_payload(FILE *binary, Elf64_Addr injection_site, uint8_t *payload, int payload_size)
+{
+	int retval = 0;
+
+	rewind(binary);
+
+	fseek(binary, injection_site, SEEK_CUR);
+	retval = fwrite(payload, payload_size, 1, binary);
+	if (retval <= 0)
+	{
+		puts("unable to write payload");
+		return 1;
+	}
+
+	return 0;
+}
