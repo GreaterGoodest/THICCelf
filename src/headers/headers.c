@@ -3,6 +3,40 @@
 
 #include "elf.h"
 
+int swap_entry_point(FILE *binary, int entry_address)
+{
+	/* Replaces binary entry point with provided address
+
+    */
+	int count = 0;
+	Elf64_Ehdr header;
+
+	rewind(binary);
+
+	count = fread(&header, sizeof(Elf64_Ehdr), 1, binary);
+	if (count <= 0)
+	{
+		perror("Unable to read binary");
+		return 1;
+	}
+	printf("current entry point: 0x%x\n", header.e_entry);
+	printf("changing to : 0x%x\n", entry_address);
+
+	rewind(binary);
+
+	header.e_entry = entry_address;
+	count = fwrite(&header, sizeof(Elf64_Ehdr), 1, binary);
+	if (count <= 0)
+	{
+		perror("Unable to write to binary");
+		return 1;
+	}
+
+	rewind(binary);
+
+	return 0;
+}
+
 int get_next_ph(FILE *binary, Elf64_Phdr *ph)
 {
 	/* Gets the next segment from the provided binary and returns it via segment parameter
