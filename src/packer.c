@@ -223,29 +223,6 @@ int expand_fini(FILE *binary, int payload_size)
     return 0;
 }
 
-int stamp_entrypoint(uint8_t *payload, Elf64_Addr entrypoint)
-{
-    uint8_t *payload_ptr = payload;
-    int stamped = 0;
-
-    while (!stamped)
-    {
-        if (*((long *)payload_ptr) == 0)
-        {
-            break;
-        }
-        if (!(*((long *)payload_ptr) ^ 0xAAAAAAAAAAAAAAAA))
-        {
-            *((long *)payload_ptr) = (long)entrypoint;
-            printf("Overwrote placeholder with entrypoint: %lx", entrypoint);
-            return 0;
-        }
-        payload_ptr++;
-    }
-
-    return 1;
-}
-
 int main(int argc, char *argv[])
 {
     int retval = 0;

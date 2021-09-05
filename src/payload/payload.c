@@ -1,3 +1,4 @@
+#include <elf.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -52,4 +53,27 @@ int get_payload(uint8_t **payload, const char *path)
 
 	fclose(file);
 	return counter;
+}
+
+int stamp_entrypoint(uint8_t *payload, Elf64_Addr entrypoint)
+{
+	uint8_t *payload_ptr = payload;
+	int stamped = 0;
+
+	while (!stamped)
+	{
+		if (*((long *)payload_ptr) == 0)
+		{
+			break;
+		}
+		if (!(*((long *)payload_ptr) ^ 0xAAAAAAAAAAAAAAAA))
+		{
+			*((long *)payload_ptr) = (long)entrypoint;
+			printf("Overwrote placeholder with entrypoint: %lx", entrypoint);
+			return 0;
+		}
+		payload_ptr++;
+	}
+
+	return 1;
 }
