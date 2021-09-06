@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "elf.h"
+#include "info.h"
 
 Elf64_Addr swap_entry_point(FILE *binary, int entry_address)
 {
@@ -91,7 +92,7 @@ int find_executable_ph(FILE *binary, Elf64_Phdr *ph, int ph_start, int ph_num)
 	return -1;
 }
 
-int get_ph_info(FILE *binary, int *ph_start, int *ph_num, Elf64_Addr *entrypoint)
+int get_ph_info(FILE *binary, target_info *t_info, Elf64_Addr *entrypoint)
 {
 	/* Get start of program headers, and size of program headers
 
@@ -108,8 +109,8 @@ int get_ph_info(FILE *binary, int *ph_start, int *ph_num, Elf64_Addr *entrypoint
 	printf("Program Headers start at: %d\n", header.e_phoff);
 	printf("Total program header entries: %d\n", header.e_phnum);
 
-	*ph_start = header.e_phoff;
-	*ph_num = header.e_phnum;
+	t_info->ph_start = header.e_phoff;
+	t_info->ph_num = header.e_phnum;
 	*entrypoint = header.e_entry;
 
 	rewind(binary);

@@ -5,13 +5,12 @@
 
 #include "caving.h"
 #include "headers.h"
+#include "info.h"
 #include "payload.h"
 
 int main(int argc, char *argv[])
 {
     int retval = 0;
-    int ph_start = 0; //start address for program headers
-    int ph_num = 0;   //program header (ph) count
     int padding = 0;
     int payload_size = 0;
     FILE *binary = NULL;
@@ -21,6 +20,7 @@ int main(int argc, char *argv[])
     Elf64_Addr old_entry;
     Elf64_Addr prev_exe_segment_end; //where exe ph ends before modification
     uint8_t *payload = NULL;
+    target_info t_info;
 
     memset(&exe_ph, 0, sizeof(exe_ph));
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
         return retval;
     }
 
-    retval = get_ph_info(binary, &ph_start, &ph_num, &entrypoint);
+    retval = get_ph_info(binary, &t_info, &entrypoint);
     if (retval > 0)
     {
         puts("Failed to find segment size");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         goto cleanup;
     }
 
-    exe_ph_start = find_executable_ph(binary, &exe_ph, ph_start, ph_num);
+    exe_ph_start = find_executable_ph(binary, &exe_ph, t_info.ph_start, t_info.ph_num);
     if (exe_ph_start <= 0)
     {
         puts("Failed to find executable segment");

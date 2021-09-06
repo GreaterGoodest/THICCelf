@@ -1,4 +1,4 @@
-include = -Ipayload -Iheaders -Icaving
+include = -Ipayload -Iheaders -Icaving -Iinfo
 
 all: payload/payload.o headers/headers.o caving/caving.o thicc
 

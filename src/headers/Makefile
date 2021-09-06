@@ -1,5 +1,7 @@
+include = -I../info
+
 headers: headers.c
-	gcc -c headers.c -o headers.o
+	gcc $(include) -c headers.c -o headers.o
 
 clean:
 	-rm *.o
