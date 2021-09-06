@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     Elf64_Phdr exe_ph;
     Elf64_Addr exe_ph_start; //where executable program header begins
     Elf64_Addr entrypoint;
+    Elf64_Addr old_entry;
     Elf64_Addr prev_exe_segment_end; //where exe ph ends before modification
     uint8_t *payload = NULL;
 
@@ -115,12 +116,14 @@ int main(int argc, char *argv[])
         goto cleanup;
     }
 
-    retval = swap_entry_point(binary, exe_ph.p_paddr + exe_ph.p_filesz);
-    if (retval > 0)
+    old_entry = swap_entry_point(binary, exe_ph.p_paddr + exe_ph.p_filesz);
+    if (old_entry <= 0)
     {
         puts("Failed to swap entry point");
         goto cleanup;
     }
+
+    printf("old entry point: 0x%x\n", old_entry);
 
     puts("Successfully overwrote entry point");
 

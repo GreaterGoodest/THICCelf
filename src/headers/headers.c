@@ -3,13 +3,14 @@
 
 #include "elf.h"
 
-int swap_entry_point(FILE *binary, int entry_address)
+Elf64_Addr swap_entry_point(FILE *binary, int entry_address)
 {
 	/* Replaces binary entry point with provided address
 
     */
 	int count = 0;
 	Elf64_Ehdr header;
+	Elf64_Addr old_entry;
 
 	rewind(binary);
 
@@ -17,9 +18,11 @@ int swap_entry_point(FILE *binary, int entry_address)
 	if (count <= 0)
 	{
 		perror("Unable to read binary");
-		return 1;
+		return -1;
 	}
-	printf("current entry point: 0x%x\n", header.e_entry);
+
+	old_entry = header.e_entry;
+	printf("current entry point: 0x%x\n", old_entry);
 	printf("changing to : 0x%x\n", entry_address);
 
 	rewind(binary);
@@ -29,12 +32,12 @@ int swap_entry_point(FILE *binary, int entry_address)
 	if (count <= 0)
 	{
 		perror("Unable to write to binary");
-		return 1;
+		return -1;
 	}
 
 	rewind(binary);
 
-	return 0;
+	return old_entry;
 }
 
 int get_next_ph(FILE *binary, Elf64_Phdr *ph)

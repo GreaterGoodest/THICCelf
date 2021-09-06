@@ -6,7 +6,7 @@ all: $(SUBDIRS)
 		$(MAKE) -C $$dir -f Makefile $@; \
 	done
 	mkdir -p ./bin
-	mv ./src/packer ./bin/packer
+	mv ./src/thicc ./bin/thicc
 	mv ./testing/test ./bin/test
 	mv ./asm/test.shell ./bin/test.shell
 

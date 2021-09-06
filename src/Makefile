@@ -1,6 +1,6 @@
 include = -Ipayload -Iheaders -Icaving
 
-all: payload/payload.o packer
+all: payload/payload.o headers/headers.o caving/caving.o thicc
 
 payload/payload.o:
 	$(MAKE) -C payload
@@ -11,8 +11,8 @@ headers/headers.o:
 caving/caving.o:
 	$(MAKE) -C caving
 
-packer: packer.c payload/payload.o headers/headers.o caving/caving.o
-	gcc $(include) packer.c payload/payload.o headers/headers.o caving/caving.o -o packer -g 
+thicc: thicc.c payload/payload.o headers/headers.o caving/caving.o
+	gcc $(include) thicc.c payload/payload.o headers/headers.o caving/caving.o -o thicc -g 
 
 clean:
 	$(MAKE) -C payload -f Makefile clean

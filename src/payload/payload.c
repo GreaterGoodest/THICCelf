@@ -69,7 +69,7 @@ int stamp_entrypoint(uint8_t *payload, Elf64_Addr entrypoint)
 		if (!(*((long *)payload_ptr) ^ 0xAAAAAAAAAAAAAAAA))
 		{
 			*((long *)payload_ptr) = (long)entrypoint;
-			printf("Overwrote placeholder with entrypoint: %lx", entrypoint);
+			printf("Overwrote placeholder with entrypoint: 0x%lx\n", entrypoint);
 			return 0;
 		}
 		payload_ptr++;
