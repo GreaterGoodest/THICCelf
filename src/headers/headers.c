@@ -61,7 +61,7 @@ int get_next_ph(FILE *binary, Elf64_Phdr *ph)
 	return retval;
 }
 
-int find_executable_ph(FILE *binary, Elf64_Phdr *ph, int ph_start, int ph_num)
+int find_executable_ph(FILE *binary, Elf64_Phdr *ph, target_info t_info)
 {
 	/* Locates the executable segment within the binary and returns it via segment parameter
 
@@ -70,8 +70,8 @@ int find_executable_ph(FILE *binary, Elf64_Phdr *ph, int ph_start, int ph_num)
 	int curr_ph = 0;
 	Elf64_Addr curr_ph_start = 0; //addr where current ph begins
 
-	fseek(binary, ph_start, SEEK_CUR);
-	while (curr_ph < ph_num)
+	fseek(binary, t_info.ph_start, SEEK_CUR);
+	while (curr_ph < t_info.ph_num)
 	{
 		curr_ph_start = ftell(binary);
 		retval = get_next_ph(binary, ph);

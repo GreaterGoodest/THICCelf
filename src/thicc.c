@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         goto cleanup;
     }
 
-    exe_ph_start = find_executable_ph(binary, &exe_ph, t_info.ph_start, t_info.ph_num);
+    exe_ph_start = find_executable_ph(binary, &exe_ph, t_info);
     if (exe_ph_start <= 0)
     {
         puts("Failed to find executable segment");
