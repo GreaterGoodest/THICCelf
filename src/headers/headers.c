@@ -61,7 +61,7 @@ int get_next_ph(FILE *binary, Elf64_Phdr *ph)
 	return retval;
 }
 
-int find_executable_ph(FILE *binary, Elf64_Phdr *ph, target_info t_info)
+Elf64_Addr find_executable_ph(FILE *binary, Elf64_Phdr *ph, target_info t_info)
 {
 	/* Locates the executable segment within the binary and returns it via segment parameter
 

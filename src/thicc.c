@@ -15,14 +15,15 @@ int main(int argc, char *argv[])
     int payload_size = 0;
     FILE *binary = NULL;
     Elf64_Phdr exe_ph;
-    Elf64_Addr exe_ph_start; //where executable program header begins
-    Elf64_Addr entrypoint;
-    Elf64_Addr old_entry;
-    Elf64_Addr prev_exe_segment_end; //where exe ph ends before modification
+    Elf64_Addr exe_ph_start = 0; //where executable program header begins
+    Elf64_Addr entrypoint = 0;
+    Elf64_Addr old_entry = 0;
+    Elf64_Addr prev_exe_segment_end = 0; //where exe ph ends before modification
     uint8_t *payload = NULL;
     target_info t_info;
 
     memset(&exe_ph, 0, sizeof(exe_ph));
+    memset(&t_info, 0, sizeof(target_info));
 
     if (argc != 2)
     {
@@ -55,6 +56,9 @@ int main(int argc, char *argv[])
 
     printf("Execuatable ph at: 0x%x\n", exe_ph_start);
     printf("Executable segment at: 0x%x\n", exe_ph.p_paddr);
+
+    t_info.exe_segment_start = exe_ph.p_paddr;
+    t_info.exe_segment_size = exe_ph.p_filesz;
 
     retval = calculate_padding(binary, exe_ph, &padding);
     if (retval > 0)
